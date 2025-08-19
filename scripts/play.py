@@ -82,65 +82,179 @@ def parse_move(move_input):
         return None
 
 
+def select_game_mode():
+    """
+    Let user select game mode.
+    
+    Returns:
+        tuple: (mode, player1, player2) where mode is string and players are agent instances or None for human
+    """
+    print("\nSelect Game Mode:")
+    print("1. Player vs Player (PvP)")
+    print("2. Player vs AI - Random (Easy)")
+    print("3. Player vs AI - Heuristic (Hard)")
+    print("4. AI vs AI - Random vs Heuristic")
+    
+    while True:
+        try:
+            choice = input("\nEnter your choice (1-4): ").strip()
+            
+            if choice == '1':
+                return ('pvp', None, None)
+            elif choice == '2':
+                return ('pvai_random', None, RandomAgent(seed=42))
+            elif choice == '3':
+                return ('pvai_heuristic', None, HeuristicAgent(seed=42))
+            elif choice == '4':
+                return ('aivai', RandomAgent(seed=123), HeuristicAgent(seed=456))
+            else:
+                print("Invalid choice! Please enter 1, 2, 3, or 4.")
+                
+        except (KeyboardInterrupt, EOFError):
+            print("\nExiting...")
+            sys.exit(0)
+
+
+def get_human_move(game, player):
+    """
+    Get move input from human player.
+    
+    Returns:
+        tuple: (row, col) or None if quit
+    """
+    while True:
+        try:
+            player_name = get_player_name(player)
+            move_input = input(f"{player_name}, enter your move (row col) or 'quit': ").strip()
+            
+            if move_input.lower() in ['quit', 'exit', 'q']:
+                return None
+                
+            move = parse_move(move_input)
+            if move is None:
+                print("Invalid input! Please enter: row col (e.g., '7 7')")
+                continue
+                
+            row, col = move
+            if game.board.state[row, col] == 0:  # Position is empty
+                return (row, col)
+            else:
+                print(f"Position ({row}, {col}) is already occupied!")
+                
+        except (KeyboardInterrupt, EOFError):
+            return None
+
+
+def get_ai_move(agent, game, player):
+    """
+    Get move from AI agent.
+    
+    Returns:
+        tuple: (row, col)
+    """
+    print(f"{get_player_name(player)} (AI) is thinking...")
+    
+    # Add small delay to make it feel more natural
+    time.sleep(0.5)
+    
+    move = agent.select_action(game)
+    if move:
+        print(f"{get_player_name(player)} (AI) plays: {move[0]} {move[1]}")
+    return move
+
+
 def main():
     """Main game loop."""
-    print("=" * 50)
-    print("         GOMOKU (Standard 5-only Rules)")
-    print("=" * 50)
+    print("=" * 60)
+    print("           GOMOKU (Standard 5-only Rules)")
+    print("=" * 60)
     print("Rules: Get exactly 5 stones in a row to win.")
     print("Overlines (6+ stones) do NOT count as wins!")
     print("Black (X) goes first. Enter moves as: row col")
     print("Example: '7 7' places stone at center")
-    print("=" * 50)
+    print("=" * 60)
+    
+    # Select game mode
+    mode, player1_agent, player2_agent = select_game_mode()
+    
+    # Display mode info
+    mode_descriptions = {
+        'pvp': "Player vs Player",
+        'pvai_random': "Player vs AI (Random - Easy)",
+        'pvai_heuristic': "Player vs AI (Heuristic - Hard)", 
+        'aivai': "AI vs AI (Random vs Heuristic)"
+    }
+    
+    print(f"\n🎮 Starting: {mode_descriptions[mode]}")
+    print("=" * 60)
     
     game = Game()
+    move_count = 0
     
-    while game.game_state == 'ongoing':
-        display_board(game)
-        print(f"\nCurrent player: {get_player_name(game.current_player)}")
-        print(f"Legal moves remaining: {len(game.board.get_legal_moves())}")
-        
-        # Get move from user
-        while True:
-            try:
-                move_input = input("Enter your move (row col) or 'quit' to exit: ").strip()
+    try:
+        while game.game_state == 'ongoing':
+            display_board(game)
+            print(f"\nMove #{move_count + 1}")
+            print(f"Current player: {get_player_name(game.current_player)}")
+            print(f"Legal moves remaining: {len(game.board.get_legal_moves())}")
+            
+            # Determine current player's agent
+            if game.current_player == 1:  # Black player
+                current_agent = player1_agent
+            else:  # White player  
+                current_agent = player2_agent
                 
-                if move_input.lower() in ['quit', 'exit', 'q']:
-                    print("Thanks for playing!")
+            # Get move based on whether current player is human or AI
+            if current_agent is None:  # Human player
+                move = get_human_move(game, game.current_player)
+                if move is None:  # User quit
+                    print("\nThanks for playing!")
                     return
-                    
-                move = parse_move(move_input)
-                if move is None:
-                    print("Invalid input! Please enter: row col (e.g., '7 7')")
-                    continue
-                    
-                row, col = move
-                if game.make_move(row, col):
+            else:  # AI player
+                move = get_ai_move(current_agent, game, game.current_player)
+                if move is None:  # Should not happen but handle gracefully
+                    print("AI could not find a move! Game ending.")
                     break
-                else:
-                    print(f"Invalid move! Position ({row}, {col}) is not available.")
-                    print("Make sure the position is empty and within bounds (0-14).")
                     
-            except KeyboardInterrupt:
-                print("\nThanks for playing!")
-                return
-            except EOFError:
-                print("\nThanks for playing!")
-                return
+            # Make the move
+            if game.make_move(*move):
+                move_count += 1
+                # Add small pause after AI moves for better UX
+                if current_agent is not None and mode != 'aivai':
+                    time.sleep(1)
+            else:
+                print(f"ERROR: Invalid move {move}!")
+                break
+    
+    except (KeyboardInterrupt, EOFError):
+        print("\nThanks for playing!")
+        return
     
     # Game ended - show final state
     display_board(game)
-    print("\n" + "=" * 50)
+    print("\n" + "=" * 60)
     
     if game.game_state == 'win':
         winner_name = get_player_name(game.winner)
-        print(f"🎉 GAME OVER - {winner_name} wins!")
-        print("Congratulations!")
+        if mode == 'pvp':
+            print(f"🎉 GAME OVER - {winner_name} wins!")
+        elif mode.startswith('pvai'):
+            if (game.winner == 1 and player1_agent is None) or (game.winner == -1 and player2_agent is None):
+                print(f"🎉 CONGRATULATIONS! You ({winner_name}) beat the AI!")
+            else:
+                print(f"💻 AI ({winner_name}) wins! Better luck next time!")
+        elif mode == 'aivai':
+            ai_name = "Random AI" if game.winner == 1 else "Heuristic AI"
+            print(f"🤖 {ai_name} ({winner_name}) wins!")
+            
+        print(f"Game completed in {move_count} moves.")
+        
     elif game.game_state == 'draw':
         print("🤝 GAME OVER - It's a draw!")
         print("The board is full with no winner.")
+        print(f"Game completed in {move_count} moves.")
     
-    print("=" * 50)
+    print("=" * 60)
 
 
 if __name__ == "__main__":
