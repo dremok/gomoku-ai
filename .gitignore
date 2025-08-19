@@ -151,3 +151,11 @@ cython_debug/
 # Game saves and logs
 *.save
 game_logs/
+
+# Training data and models (local storage)
+data/
+models/
+runs/
+logs/
+checkpoints/
+training_data/

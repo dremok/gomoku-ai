@@ -159,14 +159,24 @@ def get_ai_move(agent, game, player):
     Returns:
         tuple: (row, col)
     """
-    print(f"{get_player_name(player)} (AI) is thinking...")
+    # Determine agent type for display
+    agent_type = "AI"
+    if hasattr(agent, '__class__'):
+        if agent.__class__.__name__ == 'RandomAgent':
+            agent_type = "Random AI"
+        elif agent.__class__.__name__ == 'HeuristicAgent':
+            agent_type = "Heuristic AI"
+        elif agent.__class__.__name__ == 'DQNAgent':
+            agent_type = "DQN AI"
+    
+    print(f"{get_player_name(player)} ({agent_type}) is thinking...")
     
     # Add small delay to make it feel more natural
     time.sleep(0.5)
     
     move = agent.select_action(game)
     if move:
-        print(f"{get_player_name(player)} (AI) plays: {move[0]} {move[1]}")
+        print(f"{get_player_name(player)} ({agent_type}) plays: {move[0]} {move[1]}")
     return move
 
 

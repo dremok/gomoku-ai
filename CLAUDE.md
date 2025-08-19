@@ -77,10 +77,25 @@ Be decisive and provide direction while still asking for confirmation.
 - ✅ HeuristicAgent (pattern recognition AI) - 14/14 tests passing
 - ✅ Agent evaluation (HeuristicAgent: 100% win rate vs RandomAgent > 80% requirement)
 
-**Next Milestone: M5 - DQN Model & Inference** 🔄
-- Implementing Deep Q-Network for Gomoku AI
-- State encoding, network architecture, legal move masking
-- DQNAgent class with PyTorch integration
+**Milestone Completed: M5 - DQN Model & Inference** ✅
+- ✅ State encoding (4-channel tensor format) - 11/11 tests passing
+- ✅ Dueling DQN network architecture - 12/12 tests passing
+- ✅ Action selection with ε-greedy - 16/16 tests passing
+- ✅ DQNAgent class with PyTorch integration - 17/17 tests passing
+- ✅ CLI integration (6 game modes including DQN) - fully playable
+
+**Milestone Completed: M6 - Self-Play & Replay** ✅
+- ✅ Replay buffer system (with prioritized option) - 19/19 tests passing
+- ✅ Self-play game generation - 15/15 tests passing
+- ✅ Training data collection and management - 18/18 tests passing
+- ✅ Batch generation for neural network training - integrated
+- ✅ Complete training infrastructure ready
+
+**Next Milestone: M7 - Training Loop & Optimization** 🔄
+- Implementing DQN training algorithm with experience replay
+- Loss functions, target network updates, optimizer setup
+- Training monitoring and checkpointing
+- Model evaluation and performance tracking
 
 **Decision: GUI Optional**
 - M3 GUI (Tkinter) marked as optional since CLI works excellently
@@ -139,16 +154,35 @@ gomoku-ai/
         __init__.py
         random_agent.py # ✅ RandomAgent implementation (7/7 tests passing)
         heuristic_agent.py # ✅ HeuristicAgent with pattern recognition (14/14 tests passing)
+        dqn_agent.py    # ✅ DQNAgent with PyTorch integration (17/17 tests passing)
+      models/
+        __init__.py
+        state_encoding.py # ✅ 4-channel state encoding (11/11 tests passing)
+        dqn_model.py    # ✅ Dueling DQN architecture (12/12 tests passing)
+        action_selection.py # ✅ ε-greedy action selection (16/16 tests passing)
+      training/
+        __init__.py
+        replay_buffer.py # ✅ Experience replay system (19/19 tests passing)
+        self_play.py    # ✅ Self-play game generation (15/15 tests passing)
+        data_utils.py   # ✅ Training data management (18/18 tests passing)
   scripts/
-    play.py             # ✅ Full CLI with PvP/PvAI/AIvAI modes  
+    play.py             # ✅ Full CLI with PvP/PvAI/AIvAI modes (6 game modes)
     evaluate_agents.py  # ✅ Agent evaluation framework (HeuristicAgent: 100% vs Random)
+    demo_self_play.py   # ✅ Self-play system demonstration
   tests/
     __init__.py
     test_board.py       # ✅ 23 Board tests (all passing)
     test_game.py        # ✅ 8 Game tests (all passing)
     test_random_agent.py # ✅ 7 RandomAgent tests (all passing)
     test_heuristic_agent.py # ✅ 14 HeuristicAgent tests (all passing)
-  requirements.txt      # numpy, pytest
+    test_dqn_agent.py   # ✅ 17 DQNAgent tests (all passing)
+    test_state_encoding.py # ✅ 11 state encoding tests (all passing)
+    test_dqn_model.py   # ✅ 12 DQN model tests (all passing)
+    test_action_selection.py # ✅ 16 action selection tests (all passing)
+    test_replay_buffer.py # ✅ 19 replay buffer tests (all passing)
+    test_self_play.py   # ✅ 15 self-play tests (all passing)
+    test_data_utils.py  # ✅ 18 data utilities tests (all passing)
+  requirements.txt      # numpy, pytest, torch
   CLAUDE.md            # This file
   README.md            # Development plan with current progress
 
@@ -176,11 +210,15 @@ pip install torch pyyaml rich click tqdm matplotlib pytest black ruff
 pytest -q
 
 # Play Gomoku (fully working)
-python scripts/play.py                        # Interactive CLI with 4 modes:
-                                              # 1. PvP, 2. PvAI-Random, 3. PvAI-Heuristic, 4. AIvAI
+python scripts/play.py                        # Interactive CLI with 6 modes:
+                                              # 1. PvP, 2. PvAI-Random, 3. PvAI-Heuristic, 
+                                              # 4. PvAI-DQN, 5. AI vs AI, 6. Heuristic vs DQN
 
 # Evaluate agents (working)
 python scripts/evaluate_agents.py            # Test agent performance (HeuristicAgent vs RandomAgent)
+
+# Demo self-play system (working)
+python scripts/demo_self_play.py             # Demonstrate self-play and replay buffer systems
 
 # Future commands (not yet implemented):
 # python scripts/train.py --config config/train.yaml # Train DQN
