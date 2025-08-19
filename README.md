@@ -1,6 +1,16 @@
 # Gomoku AI (15×15, Standard 5-only) — Development Plan
 
-*A complete hand-off document for a coding agent. Intended to be saved as `Claude.md`.*
+## 🚀 Current Progress
+
+**Status**: M1 — Core Engine (In Progress)
+- ✅ **Board Initialization**: Empty 15×15 board creation with proper data types
+- ✅ **Move Application**: Stone placement with validation (bounds, empty cells, valid players)  
+- 🔄 **Next**: Legal moves generation and basic win detection
+
+**Recent Milestones Completed**:
+- Initial project structure with conda environment (`gomoku`)
+- Board class with comprehensive test coverage (3/3 tests passing)
+- Basic move validation and application functionality
 
 ---
 

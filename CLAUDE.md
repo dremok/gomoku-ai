@@ -38,6 +38,21 @@ conda activate gomoku
 
 After installing any package with `pip install <package>`, immediately add it to `requirements.txt` with appropriate version constraints.
 
+### Progress Tracking in README
+**ALWAYS** update the "Current Progress" section in README.md after completing any milestone or significant component. This helps track development status and provides visibility into what's been accomplished.
+
+**When to update README progress**:
+- After completing a major component (e.g., Board class, win detection, agent implementation)
+- After reaching a milestone checkpoint 
+- After adding significant functionality that changes project status
+- Before moving to a new development phase
+
+**How to update**:
+- Mark completed items with ✅
+- Update "Next" item with 🔄 
+- Add recent accomplishments to "Recent Milestones Completed"
+- Update overall "Status" to reflect current milestone progress
+
 ## Project Overview
 
 This is a Gomoku AI project implementing a playable 15×15 board game with Deep Q-Learning (DQN) agent trained via self-play. The project follows Standard Gomoku rules (5-only) where wins require exactly 5 contiguous stones and overlines (≥6) do not count as wins.
