@@ -2,15 +2,19 @@
 
 ## 🚀 Current Progress
 
-**Status**: M1 — Core Engine (In Progress)
-- ✅ **Board Initialization**: Empty 15×15 board creation with proper data types
-- ✅ **Move Application**: Stone placement with validation (bounds, empty cells, valid players)  
-- 🔄 **Next**: Legal moves generation and basic win detection
+**Status**: M1 — Core Engine (COMPLETED) + M2 — CLI Game (COMPLETED)
+- ✅ **Board System**: Complete 15×15 board with move validation, win detection (all 4 directions), draw detection
+- ✅ **Game Engine**: Full game flow with turn management, state tracking (ongoing/win/draw)
+- ✅ **Win Detection**: Standard 5-only rules implemented - exactly 5 stones win, overlines (6+) rejected
+- ✅ **CLI Interface**: Fully playable command-line Gomoku game with ASCII display
+- 🔄 **Next**: AI Agents (RandomAgent, HeuristicAgent, then DQN)
 
-**Recent Milestones Completed**:
-- Initial project structure with conda environment (`gomoku`)
-- Board class with comprehensive test coverage (3/3 tests passing)
-- Basic move validation and application functionality
+**Major Achievements**:
+- Complete Board class with 23/23 tests passing (initialization, moves, legal moves, win detection, draw detection)
+- Complete Game class with 8/8 tests passing (initialization, move processing, game state management)  
+- Working CLI at `scripts/play.py` - fully playable PvP Gomoku game
+- Proper Standard Gomoku (5-only) rules: overlines don't count as wins
+- **Total: 31/31 tests passing** ✅
 
 ---
 

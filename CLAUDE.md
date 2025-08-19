@@ -54,6 +54,20 @@ Example correct thinking:
 
 Stay in baby step mode always. Each step builds incrementally on verified, working foundations.
 
+### Communication Style for Next Steps
+**Don't ask open-ended questions** like "What's the next natural baby step?" 
+
+Instead:
+- **Suggest the specific next step** you think makes most sense
+- **Briefly explain why** it's the logical progression  
+- **Ask for permission** to proceed in that direction
+
+Example:
+❌ "What's the next natural baby step?"
+✅ "I think the next step should be implementing a simple RandomAgent class that can make moves automatically. This would let us test PvAI gameplay and provides the foundation for all AI agents. Should I proceed with this?"
+
+Be decisive and provide direction while still asking for confirmation.
+
 ### Critical: Dependency Management
 **ALWAYS** update `requirements.txt` when installing new packages. This is essential for:
 - Reproducible environments
@@ -90,31 +104,31 @@ This is a Gomoku AI project implementing a playable 15×15 board game with Deep 
 - **Compute**: CPU-only (no GPU requirements)
 - **State Representation**: `np.int8[15,15]` with {0: empty, 1: black, -1: white}
 
-## Expected Repository Structure
+## Current Repository Structure
 
 ```
 gomoku-ai/
   gomoku/
     __init__.py
     core/
-      board.py          # Board state, moves, win/draw detection
-      rules.py          # Standard (5-only) rule helpers
-      game.py           # Turn loop, game transcript
-    ui/
-      cli.py            # CLI interface
-      tk_gui.py         # Tkinter GUI
-    ai/
-      agents/           # Random, heuristic, and DQN agents
-      models/           # DQN neural network models
-      training/         # Self-play, replay buffer, training loop
-    utils/              # Config, logging, symmetry utilities
+      __init__.py
+      board.py          # Complete Board implementation with win/draw detection
+      game.py           # Complete Game implementation with turn management
   scripts/
-    play.py             # Main entry point for playing
-    train.py            # Training entry point
-    evaluate.py         # Evaluation and arena matches
-  models/               # Saved model weights and metadata
-  config/               # YAML configuration files
-  tests/                # Unit tests for core components
+    play.py             # Working CLI interface for PvP gameplay
+  tests/
+    __init__.py
+    test_board.py       # 23 Board tests (all passing)
+    test_game.py        # 8 Game tests (all passing)
+  requirements.txt      # numpy, pytest
+  CLAUDE.md            # This file
+  README.md            # Development plan with current progress
+
+# Future structure (not yet implemented):
+  gomoku/ai/agents/    # AI agents (RandomAgent, HeuristicAgent, DQN)
+  gomoku/ui/           # GUI components
+  models/              # Trained model weights
+  config/              # Configuration files
 ```
 
 ## Common Development Commands
@@ -132,17 +146,14 @@ pip install torch pyyaml rich click tqdm matplotlib pytest black ruff
 # Run tests
 pytest -q
 
-# Play modes
-python scripts/play.py --mode pvp              # Player vs Player (GUI)
-python scripts/play.py --mode pvai --ai1 dqn --model models/best.pt
-python scripts/play.py --mode pvp --cli        # CLI mode
+# Play Gomoku (currently available)
+python scripts/play.py                        # Interactive CLI Gomoku game (PvP)
 
-# Training
-python scripts/train.py --config config/train.yaml
-
-# Evaluation
-python scripts/evaluate.py --p1 heuristic --p2 random --games 200 --swap-colors
-python scripts/evaluate.py --config config/eval.yaml --model models/best.pt
+# Future commands (not yet implemented):
+# python scripts/play.py --mode pvai --ai random    # vs RandomAgent  
+# python scripts/play.py --mode pvai --ai heuristic # vs HeuristicAgent
+# python scripts/train.py --config config/train.yaml # Train DQN
+# python scripts/evaluate.py --p1 heuristic --p2 random --games 200
 ```
 
 ## Critical Implementation Details
