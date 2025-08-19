@@ -4,11 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Environment Setup
 
-**Important**: This project uses a conda environment named `gomoku`. Always activate it before running any commands:
+**Important**: This project uses a conda environment named `gomoku`. 
 
-```bash
-conda activate gomoku
-```
+Always check if this conda environment is active before trying to activate it.
+If not active, try to activate it before running any commands.
 
 # Workarounds, Fallbacks & Heuristics
  
@@ -68,6 +67,26 @@ Example:
 
 Be decisive and provide direction while still asking for confirmation.
 
+## Current Development Status
+
+**Milestone Completed: M4 - Baseline Agents** ✅
+- ✅ Board system (15×15, Standard 5-only rules) - 23/23 tests passing
+- ✅ Game engine (turn management, state tracking) - 8/8 tests passing  
+- ✅ CLI interface (PvP/PvAI modes) - fully playable
+- ✅ RandomAgent (baseline AI) - 7/7 tests passing
+- ✅ HeuristicAgent (pattern recognition AI) - 14/14 tests passing
+- ✅ Agent evaluation (HeuristicAgent: 100% win rate vs RandomAgent > 80% requirement)
+
+**Next Milestone: M5 - DQN Model & Inference** 🔄
+- Implementing Deep Q-Network for Gomoku AI
+- State encoding, network architecture, legal move masking
+- DQNAgent class with PyTorch integration
+
+**Decision: GUI Optional**
+- M3 GUI (Tkinter) marked as optional since CLI works excellently
+- Focus on core AI functionality first
+- Can implement GUI later if needed for user experience
+
 ### Critical: Dependency Management
 **ALWAYS** update `requirements.txt` when installing new packages. This is essential for:
 - Reproducible environments
@@ -112,23 +131,33 @@ gomoku-ai/
     __init__.py
     core/
       __init__.py
-      board.py          # Complete Board implementation with win/draw detection
-      game.py           # Complete Game implementation with turn management
+      board.py          # ✅ Complete Board implementation with win/draw detection
+      game.py           # ✅ Complete Game implementation with turn management  
+    ai/
+      __init__.py
+      agents/
+        __init__.py
+        random_agent.py # ✅ RandomAgent implementation (7/7 tests passing)
+        heuristic_agent.py # ✅ HeuristicAgent with pattern recognition (14/14 tests passing)
   scripts/
-    play.py             # Working CLI interface for PvP gameplay
+    play.py             # ✅ Full CLI with PvP/PvAI/AIvAI modes  
+    evaluate_agents.py  # ✅ Agent evaluation framework (HeuristicAgent: 100% vs Random)
   tests/
     __init__.py
-    test_board.py       # 23 Board tests (all passing)
-    test_game.py        # 8 Game tests (all passing)
+    test_board.py       # ✅ 23 Board tests (all passing)
+    test_game.py        # ✅ 8 Game tests (all passing)
+    test_random_agent.py # ✅ 7 RandomAgent tests (all passing)
+    test_heuristic_agent.py # ✅ 14 HeuristicAgent tests (all passing)
   requirements.txt      # numpy, pytest
   CLAUDE.md            # This file
   README.md            # Development plan with current progress
 
-# Future structure (not yet implemented):
-  gomoku/ai/agents/    # AI agents (RandomAgent, HeuristicAgent, DQN)
-  gomoku/ui/           # GUI components
-  models/              # Trained model weights
-  config/              # Configuration files
+# Next: DQN Implementation
+  gomoku/ai/models/    # DQN network architecture (pending)
+  gomoku/ai/training/  # Training and replay components (pending)
+  models/              # Trained model weights (pending)
+  config/              # Configuration files (pending)
+  gomoku/ui/           # GUI components (OPTIONAL - CLI works well)
 ```
 
 ## Common Development Commands
@@ -146,14 +175,16 @@ pip install torch pyyaml rich click tqdm matplotlib pytest black ruff
 # Run tests
 pytest -q
 
-# Play Gomoku (currently available)
-python scripts/play.py                        # Interactive CLI Gomoku game (PvP)
+# Play Gomoku (fully working)
+python scripts/play.py                        # Interactive CLI with 4 modes:
+                                              # 1. PvP, 2. PvAI-Random, 3. PvAI-Heuristic, 4. AIvAI
+
+# Evaluate agents (working)
+python scripts/evaluate_agents.py            # Test agent performance (HeuristicAgent vs RandomAgent)
 
 # Future commands (not yet implemented):
-# python scripts/play.py --mode pvai --ai random    # vs RandomAgent  
-# python scripts/play.py --mode pvai --ai heuristic # vs HeuristicAgent
 # python scripts/train.py --config config/train.yaml # Train DQN
-# python scripts/evaluate.py --p1 heuristic --p2 random --games 200
+# python scripts/evaluate.py --p1 dqn --p2 heuristic --games 500 # DQN evaluation
 ```
 
 ## Critical Implementation Details

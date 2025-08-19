@@ -1,3 +1,6 @@
 # Basic dependencies for Gomoku AI
 numpy>=1.21.0
 pytest>=8.0.0
+
+# Deep Learning dependencies for DQN
+torch>=2.0.0

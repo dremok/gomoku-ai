@@ -12,6 +12,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from gomoku.core.game import Game
 from gomoku.ai.agents.random_agent import RandomAgent
 from gomoku.ai.agents.heuristic_agent import HeuristicAgent
+from gomoku.ai.agents.dqn_agent import DQNAgent
 
 
 def display_board(game):
@@ -93,11 +94,13 @@ def select_game_mode():
     print("1. Player vs Player (PvP)")
     print("2. Player vs AI - Random (Easy)")
     print("3. Player vs AI - Heuristic (Hard)")
-    print("4. AI vs AI - Random vs Heuristic")
+    print("4. Player vs AI - DQN (Neural Network - Untrained)")
+    print("5. AI vs AI - Random vs Heuristic")
+    print("6. AI vs AI - Heuristic vs DQN")
     
     while True:
         try:
-            choice = input("\nEnter your choice (1-4): ").strip()
+            choice = input("\nEnter your choice (1-6): ").strip()
             
             if choice == '1':
                 return ('pvp', None, None)
@@ -106,9 +109,13 @@ def select_game_mode():
             elif choice == '3':
                 return ('pvai_heuristic', None, HeuristicAgent(seed=42))
             elif choice == '4':
-                return ('aivai', RandomAgent(seed=123), HeuristicAgent(seed=456))
+                return ('pvai_dqn', None, DQNAgent(epsilon=0.1, seed=42))
+            elif choice == '5':
+                return ('aivai_random_heuristic', RandomAgent(seed=123), HeuristicAgent(seed=456))
+            elif choice == '6':
+                return ('aivai_heuristic_dqn', HeuristicAgent(seed=123), DQNAgent(epsilon=0.1, seed=456))
             else:
-                print("Invalid choice! Please enter 1, 2, 3, or 4.")
+                print("Invalid choice! Please enter 1, 2, 3, 4, 5, or 6.")
                 
         except (KeyboardInterrupt, EOFError):
             print("\nExiting...")
@@ -181,8 +188,10 @@ def main():
     mode_descriptions = {
         'pvp': "Player vs Player",
         'pvai_random': "Player vs AI (Random - Easy)",
-        'pvai_heuristic': "Player vs AI (Heuristic - Hard)", 
-        'aivai': "AI vs AI (Random vs Heuristic)"
+        'pvai_heuristic': "Player vs AI (Heuristic - Hard)",
+        'pvai_dqn': "Player vs AI (DQN - Neural Network)",
+        'aivai_random_heuristic': "AI vs AI (Random vs Heuristic)",
+        'aivai_heuristic_dqn': "AI vs AI (Heuristic vs DQN)"
     }
     
     print(f"\n🎮 Starting: {mode_descriptions[mode]}")
@@ -243,8 +252,13 @@ def main():
                 print(f"🎉 CONGRATULATIONS! You ({winner_name}) beat the AI!")
             else:
                 print(f"💻 AI ({winner_name}) wins! Better luck next time!")
-        elif mode == 'aivai':
-            ai_name = "Random AI" if game.winner == 1 else "Heuristic AI"
+        elif mode.startswith('aivai'):
+            if mode == 'aivai_random_heuristic':
+                ai_name = "Random AI" if game.winner == 1 else "Heuristic AI"
+            elif mode == 'aivai_heuristic_dqn':
+                ai_name = "Heuristic AI" if game.winner == 1 else "DQN AI"
+            else:
+                ai_name = "AI"
             print(f"🤖 {ai_name} ({winner_name}) wins!")
             
         print(f"Game completed in {move_count} moves.")
