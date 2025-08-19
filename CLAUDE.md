@@ -10,6 +10,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 conda activate gomoku
 ```
 
+# Workarounds, Fallbacks & Heuristics
+ 
+- Avoid "workarounds", "heuristics", and other garbage you might reach for when you don't understand the issue.
+- If you think a heuristic is useful, then you are definitely wrong and this means we are taking a wrong approach.
+- You MUST consider breaking out of local maxima in case you try to use heuristics.
+
 ## Development Approach
 
 **Critical**: This project must be developed incrementally with verification at each small checkpoint. Never implement multiple components at once without testing.
@@ -29,6 +35,21 @@ conda activate gomoku
 - Only then move to next major component
 
 **Never skip verification steps**. If something doesn't work at a checkpoint, fix it immediately before proceeding.
+
+### Critical: Always Stay in Baby Steps Mode
+**NEVER** ask whether to move to "the next major component" vs "another baby step". This is a false choice that misunderstands the methodology.
+
+- **Every step is a baby step** - this never changes
+- Moving to a new major component IS a baby step if that's the natural next progression
+- Baby steps continue throughout the entire development process
+- The question is always: "What is the next natural baby step?" - whether that's within current functionality or starting something new
+
+Example correct thinking:
+- ✅ "The next baby step is to add basic draw detection"  
+- ✅ "The next baby step is to start implementing Game class initialization"
+- ❌ "Should we move to the next major component or continue with baby steps?"
+
+Stay in baby step mode always. Each step builds incrementally on verified, working foundations.
 
 ### Critical: Dependency Management
 **ALWAYS** update `requirements.txt` when installing new packages. This is essential for:

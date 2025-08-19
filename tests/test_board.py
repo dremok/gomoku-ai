@@ -144,3 +144,313 @@ def test_full_board_legal_moves():
     # Verify board is actually full
     assert np.all(board.state != 0)
     assert np.sum(board.state != 0) == 225
+
+
+def test_horizontal_5_in_a_row_win():
+    """Test detection of horizontal 5-in-a-row wins."""
+    board = Board()
+    
+    # Test black horizontal win in middle row
+    for col in range(5, 10):  # Positions (7, 5) through (7, 9)
+        board.apply_move(7, col, 1)
+    
+    # Check win detection for each position in the line
+    for col in range(5, 10):
+        winner = board.check_winner(7, col)
+        assert winner == 1, f"Should detect black win at position (7, {col})"
+    
+    # Test white horizontal win in different row
+    board2 = Board()
+    for col in range(0, 5):  # Positions (3, 0) through (3, 4) 
+        board2.apply_move(3, col, -1)
+    
+    # Check win detection for white
+    for col in range(0, 5):
+        winner = board2.check_winner(3, col)
+        assert winner == -1, f"Should detect white win at position (3, {col})"
+
+
+def test_horizontal_4_in_a_row_no_win():
+    """Test that 4-in-a-row does not trigger a win."""
+    board = Board()
+    
+    # Place only 4 black stones horizontally
+    for col in range(5, 9):  # Positions (7, 5) through (7, 8)
+        board.apply_move(7, col, 1)
+    
+    # Should not detect a win
+    for col in range(5, 9):
+        winner = board.check_winner(7, col)
+        assert winner is None, f"Should not detect win with only 4 stones at (7, {col})"
+
+
+def test_horizontal_overline_no_win():
+    """Test that horizontal overlines (6+ stones) do NOT count as wins."""
+    board = Board()
+    
+    # Place 6 black stones horizontally (overline)
+    for col in range(4, 10):  # Positions (7, 4) through (7, 9) - 6 stones
+        board.apply_move(7, col, 1)
+    
+    # Should not detect a win for any position (overline rule)
+    for col in range(4, 10):
+        winner = board.check_winner(7, col)
+        assert winner is None, f"Should not detect win with overline at position (7, {col})"
+    
+    # Test 7 stones (even longer overline)
+    board2 = Board()
+    for col in range(3, 10):  # Positions (5, 3) through (5, 9) - 7 stones
+        board2.apply_move(5, col, -1)
+    
+    # Should not detect a win for white either
+    for col in range(3, 10):
+        winner = board2.check_winner(5, col)
+        assert winner is None, f"Should not detect white win with longer overline at (5, {col})"
+
+
+def test_horizontal_embedded_5_in_overline():
+    """Test that a 5-in-a-row embedded within a longer line is NOT a win."""
+    board = Board()
+    
+    # Create pattern: empty, 6 stones, empty (positions 1-6 have stones)
+    # This tests that even though there are 5 consecutive stones within the 6,
+    # it should not be detected as a win due to overline
+    for col in range(1, 7):  # 6 stones at (7, 1) through (7, 6)
+        board.apply_move(7, col, 1)
+    
+    # No position should register as a win
+    for col in range(1, 7):
+        winner = board.check_winner(7, col)
+        assert winner is None, f"Embedded 5 in overline should not win at (7, {col})"
+
+
+def test_horizontal_edge_cases():
+    """Test horizontal win detection at board boundaries."""
+    board = Board()
+    
+    # Test win at left edge of board
+    for col in range(0, 5):  # Positions (7, 0) through (7, 4)
+        board.apply_move(7, col, 1)
+    
+    winner = board.check_winner(7, 2)  # Check middle of the line
+    assert winner == 1, "Should detect win at left edge of board"
+    
+    # Test win at right edge of board  
+    board2 = Board()
+    for col in range(10, 15):  # Positions (7, 10) through (7, 14)
+        board2.apply_move(7, col, -1)
+    
+    winner = board2.check_winner(7, 12)  # Check middle of the line
+    assert winner == -1, "Should detect win at right edge of board"
+
+
+def test_horizontal_no_false_positives():
+    """Test that non-winning patterns don't trigger false wins."""
+    board = Board()
+    
+    # Test scattered stones (not contiguous)
+    positions = [(7, 1), (7, 3), (7, 5), (7, 7), (7, 9)]
+    for row, col in positions:
+        board.apply_move(row, col, 1)
+        
+    # Should not detect wins
+    for row, col in positions:
+        winner = board.check_winner(row, col)
+        assert winner is None, f"Should not detect win for scattered stones at ({row}, {col})"
+    
+    # Test mixed players in line
+    board2 = Board()
+    board2.apply_move(5, 5, 1)   # Black
+    board2.apply_move(5, 6, -1)  # White  
+    board2.apply_move(5, 7, 1)   # Black
+    board2.apply_move(5, 8, 1)   # Black
+    board2.apply_move(5, 9, 1)   # Black
+    
+    # Should not detect wins for any position
+    for col in range(5, 10):
+        winner = board2.check_winner(5, col)
+        assert winner is None, f"Should not detect win in mixed line at (5, {col})"
+
+
+def test_vertical_5_in_a_row_win():
+    """Test detection of vertical 5-in-a-row wins."""
+    board = Board()
+    
+    # Test black vertical win in middle column
+    for row in range(5, 10):  # Positions (5, 7) through (9, 7)
+        board.apply_move(row, 7, 1)
+    
+    # Check win detection for each position in the line
+    for row in range(5, 10):
+        winner = board.check_winner(row, 7)
+        assert winner == 1, f"Should detect black vertical win at position ({row}, 7)"
+    
+    # Test white vertical win in different column
+    board2 = Board()
+    for row in range(0, 5):  # Positions (0, 3) through (4, 3)
+        board2.apply_move(row, 3, -1)
+    
+    # Check win detection for white
+    for row in range(0, 5):
+        winner = board2.check_winner(row, 3)
+        assert winner == -1, f"Should detect white vertical win at position ({row}, 3)"
+
+
+def test_vertical_overline_no_win():
+    """Test that vertical overlines (6+ stones) do NOT count as wins."""
+    board = Board()
+    
+    # Place 6 black stones vertically (overline)
+    for row in range(4, 10):  # Positions (4, 7) through (9, 7) - 6 stones
+        board.apply_move(row, 7, 1)
+    
+    # Should not detect a win for any position (overline rule)
+    for row in range(4, 10):
+        winner = board.check_winner(row, 7)
+        assert winner is None, f"Should not detect vertical win with overline at ({row}, 7)"
+
+
+def test_diagonal_5_in_a_row_win():
+    """Test detection of diagonal (↘) 5-in-a-row wins."""
+    board = Board()
+    
+    # Test black diagonal win (↘ direction)
+    positions = [(5, 5), (6, 6), (7, 7), (8, 8), (9, 9)]
+    for row, col in positions:
+        board.apply_move(row, col, 1)
+    
+    # Check win detection for each position in the line
+    for row, col in positions:
+        winner = board.check_winner(row, col)
+        assert winner == 1, f"Should detect black diagonal win at position ({row}, {col})"
+    
+    # Test white diagonal win in different location
+    board2 = Board()
+    positions2 = [(0, 0), (1, 1), (2, 2), (3, 3), (4, 4)]
+    for row, col in positions2:
+        board2.apply_move(row, col, -1)
+    
+    # Check win detection for white
+    for row, col in positions2:
+        winner = board2.check_winner(row, col)
+        assert winner == -1, f"Should detect white diagonal win at position ({row}, {col})"
+
+
+def test_diagonal_overline_no_win():
+    """Test that diagonal overlines (6+ stones) do NOT count as wins."""
+    board = Board()
+    
+    # Place 6 black stones diagonally (overline)
+    positions = [(4, 4), (5, 5), (6, 6), (7, 7), (8, 8), (9, 9)]
+    for row, col in positions:
+        board.apply_move(row, col, 1)
+    
+    # Should not detect a win for any position (overline rule)
+    for row, col in positions:
+        winner = board.check_winner(row, col)
+        assert winner is None, f"Should not detect diagonal win with overline at ({row}, {col})"
+
+
+def test_anti_diagonal_5_in_a_row_win():
+    """Test detection of anti-diagonal (↙) 5-in-a-row wins."""
+    board = Board()
+    
+    # Test black anti-diagonal win (↙ direction)
+    positions = [(5, 9), (6, 8), (7, 7), (8, 6), (9, 5)]
+    for row, col in positions:
+        board.apply_move(row, col, 1)
+    
+    # Check win detection for each position in the line
+    for row, col in positions:
+        winner = board.check_winner(row, col)
+        assert winner == 1, f"Should detect black anti-diagonal win at position ({row}, {col})"
+    
+    # Test white anti-diagonal win in different location
+    board2 = Board()
+    positions2 = [(0, 4), (1, 3), (2, 2), (3, 1), (4, 0)]
+    for row, col in positions2:
+        board2.apply_move(row, col, -1)
+    
+    # Check win detection for white
+    for row, col in positions2:
+        winner = board2.check_winner(row, col)
+        assert winner == -1, f"Should detect white anti-diagonal win at position ({row}, {col})"
+
+
+def test_anti_diagonal_overline_no_win():
+    """Test that anti-diagonal overlines (6+ stones) do NOT count as wins."""
+    board = Board()
+    
+    # Place 6 black stones anti-diagonally (overline)
+    positions = [(4, 10), (5, 9), (6, 8), (7, 7), (8, 6), (9, 5)]
+    for row, col in positions:
+        board.apply_move(row, col, 1)
+    
+    # Should not detect a win for any position (overline rule)
+    for row, col in positions:
+        winner = board.check_winner(row, col)
+        assert winner is None, f"Should not detect anti-diagonal win with overline at ({row}, {col})"
+
+
+def test_all_directions_edge_cases():
+    """Test win detection at board boundaries for all directions."""
+    
+    # Test vertical win at top edge
+    board1 = Board()
+    for row in range(0, 5):  # Top edge vertical
+        board1.apply_move(row, 7, 1)
+    winner = board1.check_winner(2, 7)
+    assert winner == 1, "Should detect vertical win at top edge"
+    
+    # Test vertical win at bottom edge
+    board2 = Board()
+    for row in range(10, 15):  # Bottom edge vertical
+        board2.apply_move(row, 7, -1)
+    winner = board2.check_winner(12, 7)
+    assert winner == -1, "Should detect vertical win at bottom edge"
+    
+    # Test diagonal win at top-left corner
+    board3 = Board()
+    positions = [(0, 0), (1, 1), (2, 2), (3, 3), (4, 4)]
+    for row, col in positions:
+        board3.apply_move(row, col, 1)
+    winner = board3.check_winner(2, 2)
+    assert winner == 1, "Should detect diagonal win at top-left"
+    
+    # Test anti-diagonal win at top-right corner
+    board4 = Board()
+    positions = [(0, 14), (1, 13), (2, 12), (3, 11), (4, 10)]
+    for row, col in positions:
+        board4.apply_move(row, col, -1)
+    winner = board4.check_winner(2, 12)
+    assert winner == -1, "Should detect anti-diagonal win at top-right"
+
+
+def test_mixed_directions_no_false_wins():
+    """Test that patterns across different directions don't create false wins."""
+    board = Board()
+    
+    # Create a cross pattern (+ shape) - should not win
+    center_row, center_col = 7, 7
+    
+    # Horizontal line (3 stones)
+    board.apply_move(center_row, center_col - 1, 1)
+    board.apply_move(center_row, center_col, 1)
+    board.apply_move(center_row, center_col + 1, 1)
+    
+    # Vertical line (3 stones, center overlaps)
+    board.apply_move(center_row - 1, center_col, 1)
+    board.apply_move(center_row + 1, center_col, 1)
+    
+    # Should not detect any wins (no single direction has 5)
+    test_positions = [
+        (center_row, center_col - 1),
+        (center_row, center_col),
+        (center_row, center_col + 1),
+        (center_row - 1, center_col),
+        (center_row + 1, center_col),
+    ]
+    
+    for row, col in test_positions:
+        winner = board.check_winner(row, col)
+        assert winner is None, f"Cross pattern should not win at ({row}, {col})"

@@ -60,3 +60,89 @@ class Board:
                 if self.state[row, col] == 0:  # Empty cell
                     legal_moves.append((row, col))
         return legal_moves
+    
+    def _check_line_win(self, row, col, player, dr, dc):
+        """
+        Check for a win in a specific direction from the given position.
+        Implements Standard Gomoku (5-only) rule: exactly 5 stones, no overlines.
+        
+        Args:
+            row (int): Starting row position
+            col (int): Starting column position  
+            player (int): Player to check (1 or -1)
+            dr (int): Row direction (-1, 0, 1)
+            dc (int): Column direction (-1, 0, 1)
+            
+        Returns:
+            bool: True if exactly 5 contiguous stones with no overline
+        """
+        # Count stones in negative direction
+        count_neg = 0
+        r, c = row - dr, col - dc
+        while (0 <= r < self.size and 0 <= c < self.size and 
+               self.state[r, c] == player):
+            count_neg += 1
+            r, c = r - dr, c - dc
+        
+        # Count stones in positive direction  
+        count_pos = 0
+        r, c = row + dr, col + dc
+        while (0 <= r < self.size and 0 <= c < self.size and
+               self.state[r, c] == player):
+            count_pos += 1
+            r, c = r + dr, c + dc
+            
+        # Total count including the stone at (row, col)
+        total_count = count_neg + 1 + count_pos
+        
+        # Must be exactly 5 for a win
+        if total_count != 5:
+            return False
+            
+        # Check for overline: verify no extension beyond the 5
+        # Check negative end
+        neg_end_r, neg_end_c = row - dr * count_neg - dr, col - dc * count_neg - dc
+        if (0 <= neg_end_r < self.size and 0 <= neg_end_c < self.size and
+            self.state[neg_end_r, neg_end_c] == player):
+            return False  # Overline detected
+            
+        # Check positive end
+        pos_end_r, pos_end_c = row + dr * count_pos + dr, col + dc * count_pos + dc
+        if (0 <= pos_end_r < self.size and 0 <= pos_end_c < self.size and
+            self.state[pos_end_r, pos_end_c] == player):
+            return False  # Overline detected
+            
+        return True
+    
+    def check_winner(self, last_move_row, last_move_col):
+        """
+        Check if the last move resulted in a win.
+        Checks all 4 directions for Standard Gomoku (5-only) wins.
+        
+        Args:
+            last_move_row (int): Row of the last move
+            last_move_col (int): Column of the last move
+            
+        Returns:
+            int or None: Player (1 or -1) if win detected, None otherwise
+        """
+        if not (0 <= last_move_row < self.size and 0 <= last_move_col < self.size):
+            return None
+            
+        player = self.state[last_move_row, last_move_col]
+        if player == 0:  # No stone at this position
+            return None
+            
+        # Check all 4 directions for wins
+        directions = [
+            (0, 1),   # Horizontal
+            (1, 0),   # Vertical  
+            (1, 1),   # Diagonal (↘)
+            (1, -1),  # Anti-diagonal (↙)
+        ]
+        
+        for dr, dc in directions:
+            if self._check_line_win(last_move_row, last_move_col, player, dr, dc):
+                return player
+                
+        return None
