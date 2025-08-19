@@ -15,6 +15,9 @@ conda activate gomoku
 - Avoid "workarounds", "heuristics", and other garbage you might reach for when you don't understand the issue.
 - If you think a heuristic is useful, then you are definitely wrong and this means we are taking a wrong approach.
 - You MUST consider breaking out of local maxima in case you try to use heuristics.
+- If necessary, backtrack (i.e. this didn't improve; delete this code)
+- Don't be afraid to make edits that compromise the integrity of the code willy-nilly
+- DO NOT keep tests/code paths just because you want to "get it done" or just because they align with your hypothesis!
 
 ## Development Approach
 

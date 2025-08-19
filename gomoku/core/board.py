@@ -146,3 +146,27 @@ class Board:
                 return player
                 
         return None
+    
+    def is_draw(self):
+        """
+        Check if the current board state is a draw.
+        A draw occurs when the board is full (no legal moves) and no winner exists.
+        
+        Returns:
+            bool: True if the game is a draw, False otherwise
+        """
+        # If there are still legal moves, it's not a draw
+        if len(self.get_legal_moves()) > 0:
+            return False
+            
+        # Board is full, check if there's a winner
+        # Since we don't have a "last move" context, we need to check if any position
+        # on the board results in a win condition
+        for row in range(self.size):
+            for col in range(self.size):
+                if self.state[row, col] != 0:  # There's a stone here
+                    if self.check_winner(row, col) is not None:
+                        return False  # There's a winner, so not a draw
+                        
+        # Board is full and no winner found
+        return True

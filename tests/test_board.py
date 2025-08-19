@@ -454,3 +454,94 @@ def test_mixed_directions_no_false_wins():
     for row, col in test_positions:
         winner = board.check_winner(row, col)
         assert winner is None, f"Cross pattern should not win at ({row}, {col})"
+
+
+def test_full_board_no_winner_is_draw():
+    """Test that a full board with no winner is detected as a draw."""
+    board = Board()
+    
+    # Fill the board with a pattern that prevents any 5-in-a-rows
+    # Use alternating pattern that changes every 3 positions to break up lines
+    for row in range(15):
+        for col in range(15):
+            # Pattern that ensures no 5 consecutive stones of same color in any direction
+            if (row + col + row // 3 + col // 3) % 2 == 0:
+                current_player = 1  # Black
+            else:
+                current_player = -1  # White
+            board.apply_move(row, col, current_player)
+    
+    # Verify board is full
+    assert len(board.get_legal_moves()) == 0, "Board should be full"
+    
+    # Should be detected as a draw
+    assert board.is_draw() == True, "Full board with no winner should be a draw"
+
+
+def test_board_with_legal_moves_not_draw():
+    """Test that boards with remaining legal moves are not draws."""
+    # Test empty board
+    board1 = Board()
+    assert board1.is_draw() == False, "Empty board should not be a draw"
+    assert len(board1.get_legal_moves()) == 225, "Empty board should have 225 legal moves"
+    
+    # Test partially filled board
+    board2 = Board()
+    positions = [(7, 7), (7, 8), (8, 7), (8, 8)]  # Place 4 stones
+    for i, (row, col) in enumerate(positions):
+        player = 1 if i % 2 == 0 else -1
+        board2.apply_move(row, col, player)
+    
+    assert board2.is_draw() == False, "Partially filled board should not be a draw"
+    assert len(board2.get_legal_moves()) == 221, "Should have 221 legal moves remaining"
+    
+    # Test nearly full board (1 move remaining)
+    board3 = Board()
+    player = 1
+    for row in range(15):
+        for col in range(15):
+            if row == 7 and col == 7:  # Leave one position empty
+                continue
+            # Use alternating pattern to prevent wins
+            if (row * 15 + col) % 4 < 2:
+                current_player = 1
+            else:
+                current_player = -1
+            board3.apply_move(row, col, current_player)
+    
+    assert board3.is_draw() == False, "Nearly full board should not be a draw"
+    assert len(board3.get_legal_moves()) == 1, "Should have 1 legal move remaining"
+
+
+def test_board_with_winner_not_draw():
+    """Test that boards with a winner are not draws, even if nearly/completely full."""
+    # Test simple board with clear winner and remaining moves
+    board1 = Board()
+    # Create horizontal win for black
+    for col in range(5, 10):  # 5 stones: (7,5) to (7,9)
+        board1.apply_move(7, col, 1)
+    
+    # Add some other non-interfering moves
+    board1.apply_move(5, 5, -1)
+    board1.apply_move(6, 6, -1)
+    
+    assert board1.is_draw() == False, "Board with winner should not be a draw"
+    winner = board1.check_winner(7, 7)  # Check middle of winning line
+    assert winner == 1, "Should detect black as winner"
+    
+    # Test board with winner but no remaining legal moves would be unusual,
+    # but let's test a simpler case - a board with a winner and some moves
+    board2 = Board()
+    
+    # Create a clear vertical win for white
+    for row in range(2, 7):  # 5 stones: (2,10) to (6,10)
+        board2.apply_move(row, 10, -1)
+        
+    # Add some other stones that don't interfere  
+    board2.apply_move(0, 0, 1)
+    board2.apply_move(1, 1, 1)
+    board2.apply_move(14, 14, 1)
+    
+    assert board2.is_draw() == False, "Board with winner should not be a draw"
+    winner = board2.check_winner(4, 10)  # Check middle of winning line
+    assert winner == -1, "Should detect white as winner"
