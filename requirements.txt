@@ -1,0 +1,2 @@
+# Basic dependencies for Gomoku AI
+numpy>=1.21.0
