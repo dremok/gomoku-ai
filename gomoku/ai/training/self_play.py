@@ -32,7 +32,8 @@ class SelfPlayGame:
                  player2_agent,
                  collect_data: bool = True,
                  max_moves: int = 450,  # 15x15 board has 225 positions, allow for long games
-                 verbose: bool = False):
+                 verbose: bool = False,
+                 tactical_rewards: bool = False):
         """
         Initialize self-play game.
         
@@ -42,12 +43,14 @@ class SelfPlayGame:
             collect_data: Whether to collect training data
             max_moves: Maximum moves before declaring draw
             verbose: Whether to print game progress
+            tactical_rewards: Whether to use tactical rewards for threat creation/blocking
         """
         self.player1_agent = player1_agent
         self.player2_agent = player2_agent
         self.collect_data = collect_data
         self.max_moves = max_moves
         self.verbose = verbose
+        self.tactical_rewards = tactical_rewards
         
         # Game data collection
         self.game_trajectory = []
@@ -172,6 +175,91 @@ class SelfPlayGame:
         
         return results
     
+    def _calculate_tactical_reward(self, current_game, next_game, player, action):
+        """
+        Calculate tactical rewards based on threats created/blocked.
+        
+        Args:
+            current_game: Game state before move
+            next_game: Game state after move  
+            player: Player who made the move
+            action: The action taken (row, col)
+            
+        Returns:
+            float: Tactical reward bonus/penalty
+        """
+        reward = 0.0
+        row, col = action
+        opponent = -player
+        
+        # Helper function to count threats (2/3/4 in a row with open ends)
+        def count_threats(game_state, check_player):
+            threats = {'2': 0, '3': 0, '4': 0}
+            board = game_state.board.state
+            
+            # Check all 4 directions from the placed stone
+            directions = [(0, 1), (1, 0), (1, 1), (1, -1)]  # horizontal, vertical, diagonal
+            
+            for dr, dc in directions:
+                # Count stones in positive direction
+                pos_count = 0
+                r, c = row + dr, col + dc
+                while (0 <= r < 15 and 0 <= c < 15 and 
+                       board[r, c] == check_player):
+                    pos_count += 1
+                    r, c = r + dr, c + dc
+                pos_open = (0 <= r < 15 and 0 <= c < 15 and board[r, c] == 0)
+                
+                # Count stones in negative direction  
+                neg_count = 0
+                r, c = row - dr, col - dc
+                while (0 <= r < 15 and 0 <= c < 15 and 
+                       board[r, c] == check_player):
+                    neg_count += 1
+                    r, c = r - dr, c - dc
+                neg_open = (0 <= r < 15 and 0 <= c < 15 and board[r, c] == 0)
+                
+                # Total count in this direction (including the placed stone)
+                total_count = pos_count + neg_count + 1
+                
+                # Count as threat if it has open ends and is 2-4 stones
+                if total_count >= 2 and total_count <= 4:
+                    if pos_open or neg_open:  # At least one open end
+                        threats[str(total_count)] += 1
+            
+            return threats
+        
+        # Calculate threats before and after move
+        current_threats = count_threats(current_game, player)
+        next_threats = count_threats(next_game, player)
+        
+        # Reward for creating threats
+        for threat_level in ['2', '3', '4']:
+            new_threats = next_threats[threat_level] - current_threats[threat_level]
+            if threat_level == '4':
+                reward += new_threats * 0.1  # High reward for 4-in-a-row threats
+            elif threat_level == '3':
+                reward += new_threats * 0.05  # Medium reward for 3-in-a-row  
+            elif threat_level == '2':
+                reward += new_threats * 0.02  # Small reward for 2-in-a-row
+        
+        # Small reward for blocking opponent threats (check if opponent would have created threats)
+        # This is approximated by checking adjacent opponent stones
+        opponent_adjacency = 0
+        for dr in [-1, 0, 1]:
+            for dc in [-1, 0, 1]:
+                if dr == 0 and dc == 0:
+                    continue
+                r, c = row + dr, col + dc
+                if (0 <= r < 15 and 0 <= c < 15 and 
+                    current_game.board.state[r, c] == opponent):
+                    opponent_adjacency += 1
+        
+        if opponent_adjacency >= 2:  # Likely blocking a threat
+            reward += 0.03
+        
+        return reward
+
     def _assign_rewards_and_next_states(self, final_game: Game, winner: Optional[int]):
         """
         Assign rewards and next states to collected experiences.
@@ -192,12 +280,24 @@ class SelfPlayGame:
             self.game_trajectory[-1]['next_state'] = None
             self.game_trajectory[-1]['done'] = True
         
-        # Assign rewards based on game outcome
+        # Assign rewards based on game outcome and tactical play
         for i, experience in enumerate(self.game_trajectory):
             player = experience['player']
             
             # Base reward for each move (small negative to encourage shorter games)
             reward = -0.01
+            
+            # Add tactical rewards for non-terminal moves (if enabled)
+            if self.tactical_rewards and i < len(self.game_trajectory) - 1:
+                # Get board states before and after this move
+                current_state = self.game_states[i] if i < len(self.game_states) else None
+                next_state = self.game_states[i + 1] if i + 1 < len(self.game_states) else None
+                
+                if current_state is not None and next_state is not None:
+                    tactical_reward = self._calculate_tactical_reward(
+                        current_state, next_state, player, experience['action']
+                    )
+                    reward += tactical_reward
             
             # Terminal state rewards
             if i == len(self.game_trajectory) - 1:  # Last move
@@ -248,7 +348,9 @@ class SelfPlayManager:
                  main_agent: DQNAgent,
                  opponent_agents: Optional[List] = None,
                  games_per_iteration: int = 100,
-                 verbose: bool = True):
+                 verbose: bool = True,
+                 tactical_rewards: bool = False,
+                 opponent_weights: Optional[List[float]] = None):
         """
         Initialize self-play manager.
         
@@ -257,10 +359,13 @@ class SelfPlayManager:
             opponent_agents: List of opponent agents (includes main_agent, random, heuristic)
             games_per_iteration: Number of games to play per iteration
             verbose: Whether to print progress
+            tactical_rewards: Whether to use tactical rewards for threat creation/blocking
+            opponent_weights: Probability weights for opponent selection (default: equal weights)
         """
         self.main_agent = main_agent
         self.games_per_iteration = games_per_iteration
         self.verbose = verbose
+        self.tactical_rewards = tactical_rewards
         
         # Default opponent pool
         if opponent_agents is None:
@@ -272,9 +377,22 @@ class SelfPlayManager:
         else:
             self.opponent_agents = opponent_agents
         
+        # Set up opponent weights for selection
+        if opponent_weights is None:
+            # Default strategic weights: 60% self-play, 30% heuristic, 10% random
+            self.opponent_weights = [0.6, 0.1, 0.3]
+        else:
+            self.opponent_weights = opponent_weights
+        
+        # Normalize weights to sum to 1
+        total_weight = sum(self.opponent_weights)
+        if total_weight > 0:
+            self.opponent_weights = [w/total_weight for w in self.opponent_weights]
+        
         # Statistics tracking
         self.session_stats = {
             'games_played': 0,
+            'opponent_games': {agent.__class__.__name__: 0 for agent in self.opponent_agents},
             'wins': 0,
             'losses': 0,
             'draws': 0,
@@ -305,9 +423,19 @@ class SelfPlayManager:
             print(f"Starting {num_games} self-play games...")
         
         for game_idx in range(num_games):
-            # Choose opponents (rotate through different opponents)
+            # Choose opponents using weighted selection
             player1 = self.main_agent
-            player2 = self.opponent_agents[game_idx % len(self.opponent_agents)]
+            
+            # Weighted random selection of opponent
+            opponent_idx = np.random.choice(
+                len(self.opponent_agents), 
+                p=self.opponent_weights
+            )
+            player2 = self.opponent_agents[opponent_idx]
+            
+            # Track opponent selection statistics
+            opponent_name = player2.__class__.__name__
+            self.session_stats['opponent_games'][opponent_name] += 1
             
             # Randomly swap sides sometimes for balanced training
             if game_idx % 2 == 1:
@@ -318,7 +446,8 @@ class SelfPlayManager:
                 player1_agent=player1,
                 player2_agent=player2,
                 collect_data=collect_data,
-                verbose=False  # Suppress individual game output
+                verbose=False,  # Suppress individual game output
+                tactical_rewards=self.tactical_rewards
             )
             
             result = self_play_game.play_game()
@@ -332,8 +461,8 @@ class SelfPlayManager:
             # Update statistics
             self._update_stats(result)
             
-            # Progress reporting
-            if self.verbose and (game_idx + 1) % 10 == 0:
+            # Progress reporting (less frequent for speed)
+            if self.verbose and (game_idx + 1) % 20 == 0:
                 print(f"Completed {game_idx + 1}/{num_games} games")
         
         if self.verbose:
@@ -356,6 +485,17 @@ class SelfPlayManager:
                 self.session_stats['losses'] += 1
         else:
             self.session_stats['draws'] += 1
+    
+    def print_opponent_stats(self):
+        """Print statistics about opponent selection."""
+        total_games = sum(self.session_stats['opponent_games'].values())
+        if total_games == 0:
+            return
+        
+        print("Opponent Mix:")
+        for opponent, count in self.session_stats['opponent_games'].items():
+            percentage = (count / total_games) * 100
+            print(f"  {opponent}: {count} games ({percentage:.1f}%)")
     
     def _print_session_summary(self):
         """Print summary of the self-play session."""

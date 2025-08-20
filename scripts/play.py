@@ -83,6 +83,62 @@ def parse_move(move_input):
         return None
 
 
+def select_trained_dqn_agent():
+    """
+    Let user select a trained DQN model or use untrained.
+    
+    Returns:
+        DQNAgent: Configured DQN agent
+    """
+    print("\nDQN Agent Configuration:")
+    print("1. Use untrained DQN (random initialization)")
+    print("2. Load trained DQN model from file")
+    
+    while True:
+        try:
+            choice = input("\nEnter your choice (1-2): ").strip()
+            
+            if choice == '1':
+                return DQNAgent(epsilon=0.05, seed=42)  # Lower epsilon for better untrained play
+            elif choice == '2':
+                model_path = input("Enter path to trained model (.pt file): ").strip()
+                if not model_path:
+                    print("No path provided, using untrained model.")
+                    return DQNAgent(epsilon=0.1, seed=42)
+                
+                try:
+                    # Try to load the model
+                    if not os.path.exists(model_path):
+                        print(f"File not found: {model_path}")
+                        print("Using untrained model instead.")
+                        return DQNAgent(epsilon=0.1, seed=42)
+                    
+                    epsilon = 0.0  # No exploration for CLI play - pure exploitation
+                    agent = DQNAgent.load_from_file(model_path, epsilon=epsilon)
+                    print(f"✅ Successfully loaded trained model: {model_path}")
+                    print(f"   Playing with epsilon={epsilon} (pure exploitation - no random moves)")
+                    
+                    # Show model info if available
+                    if hasattr(agent, 'metadata') and agent.metadata:
+                        if 'random_win_rate' in agent.metadata:
+                            print(f"   Win rate vs Random: {agent.metadata['random_win_rate']:.1%}")
+                        if 'heuristic_win_rate' in agent.metadata:
+                            print(f"   Win rate vs Heuristic: {agent.metadata['heuristic_win_rate']:.1%}")
+                    
+                    return agent
+                    
+                except Exception as e:
+                    print(f"Error loading model: {e}")
+                    print("Using untrained model instead.")
+                    return DQNAgent(epsilon=0.1, seed=42)
+            else:
+                print("Invalid choice! Please enter 1 or 2.")
+                
+        except (KeyboardInterrupt, EOFError):
+            print("\nExiting...")
+            sys.exit(0)
+
+
 def select_game_mode():
     """
     Let user select game mode.
@@ -94,7 +150,7 @@ def select_game_mode():
     print("1. Player vs Player (PvP)")
     print("2. Player vs AI - Random (Easy)")
     print("3. Player vs AI - Heuristic (Hard)")
-    print("4. Player vs AI - DQN (Neural Network - Untrained)")
+    print("4. Player vs AI - DQN (Neural Network)")
     print("5. AI vs AI - Random vs Heuristic")
     print("6. AI vs AI - Heuristic vs DQN")
     
@@ -109,11 +165,14 @@ def select_game_mode():
             elif choice == '3':
                 return ('pvai_heuristic', None, HeuristicAgent(seed=42))
             elif choice == '4':
-                return ('pvai_dqn', None, DQNAgent(epsilon=0.1, seed=42))
+                dqn_agent = select_trained_dqn_agent()
+                return ('pvai_dqn', None, dqn_agent)
             elif choice == '5':
                 return ('aivai_random_heuristic', RandomAgent(seed=123), HeuristicAgent(seed=456))
             elif choice == '6':
-                return ('aivai_heuristic_dqn', HeuristicAgent(seed=123), DQNAgent(epsilon=0.1, seed=456))
+                print("\nSelect DQN agent for this match:")
+                dqn_agent = select_trained_dqn_agent()
+                return ('aivai_heuristic_dqn', HeuristicAgent(seed=123), dqn_agent)
             else:
                 print("Invalid choice! Please enter 1, 2, 3, 4, 5, or 6.")
                 

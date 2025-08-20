@@ -91,11 +91,18 @@ Be decisive and provide direction while still asking for confirmation.
 - ✅ Batch generation for neural network training - integrated
 - ✅ Complete training infrastructure ready
 
-**Next Milestone: M7 - Training Loop & Optimization** 🔄
-- Implementing DQN training algorithm with experience replay
-- Loss functions, target network updates, optimizer setup
-- Training monitoring and checkpointing
-- Model evaluation and performance tracking
+**Milestone Completed: M7 - Training Loop & Optimization** ✅
+- ✅ DQN training algorithm with Double DQN implementation - 15/15 tests passing
+- ✅ Training loop with experience replay and evaluation - 13/13 tests passing
+- ✅ Model checkpointing and save/load functionality - integrated
+- ✅ Training script with preset configurations - working
+- ✅ Local data storage architecture - git-ignored data directory
+
+**Next Milestone: M8 - Arena, Elo & Regression Safety** 🔄
+- Tournament system for agent evaluation  
+- Elo rating calculations and leaderboards
+- Regression testing to prevent model degradation
+- Automated model validation and benchmarking
 
 **Decision: GUI Optional**
 - M3 GUI (Tkinter) marked as optional since CLI works excellently
@@ -209,7 +216,7 @@ pip install torch pyyaml rich click tqdm matplotlib pytest black ruff
 # Run tests
 pytest -q
 
-# Play Gomoku (fully working)
+# Play Gomoku CLI (fully working) - NOTE: "CLI" refers to scripts/play.py
 python scripts/play.py                        # Interactive CLI with 6 modes:
                                               # 1. PvP, 2. PvAI-Random, 3. PvAI-Heuristic, 
                                               # 4. PvAI-DQN, 5. AI vs AI, 6. Heuristic vs DQN

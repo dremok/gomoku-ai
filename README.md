@@ -2,7 +2,7 @@
 
 ## 🚀 Current Progress
 
-**Status**: M4 — Baseline Agents (COMPLETED) + M5 — DQN Model & Inference (COMPLETED) + M6 — Self-Play & Replay (COMPLETED)
+**Status**: M7 — Training Loop & Optimization (COMPLETED)
 
 ### ✅ **Completed Milestones**:
 
@@ -30,12 +30,76 @@
 - ✅ **Training Data**: Complete data pipeline with batch generation (18/18 tests)
 - ✅ **Integration**: Full training infrastructure ready
 
-### 🔄 **Next: M7 — Training Loop & Optimization**
-- Implementing DQN training algorithm with experience replay
-- Loss functions, target network updates, optimizer setup
-- Training monitoring and checkpointing
+**M7: Training Loop & Optimization** ✅
+- ✅ **DQN Trainer**: Double DQN algorithm with target network updates (15/15 tests)
+- ✅ **Training Loop**: Complete training orchestration with evaluation (13/13 tests)
+- ✅ **Model Checkpointing**: Save/load functionality with metadata
+- ✅ **Training Script**: User-friendly CLI with preset configurations
+- ✅ **Local Data Storage**: Git-ignored data directory structure
 
-**Current Test Status**: **160/160 tests passing** ✅
+### 🔄 **Next: M8 — Arena, Elo & Regression Safety**
+- Tournament system for agent evaluation
+- Elo rating calculations and leaderboards
+- Regression testing to prevent model degradation
+
+**Current Test Status**: **175/175 tests passing** ✅
+
+---
+
+## Quick Start
+
+### Training and Playing Workflow
+
+```bash
+# 1. Install dependencies
+pip install torch numpy pytest
+
+# 2. Verify everything works
+pytest -q  # Should show 175/175 tests passing
+
+# 3. Play against existing AI (untrained DQN)
+python scripts/play.py
+# Select option 4: Player vs AI - DQN (Neural Network - Untrained)
+
+# 4. Train your own DQN agent
+python train_demo.py                           # Super simple! Just run and watch (~3 min)
+python scripts/train_dqn.py                   # Same as demo preset
+python scripts/train_dqn.py --preset quick    # Fast training (~10 min)  
+python scripts/train_dqn.py --preset strategic # Optimized for tactical learning (~15 min)
+python scripts/train_dqn.py --preset standard # Full training (~30 min)
+python scripts/train_dqn.py --preset long    # Extended training (1-2 hours)
+
+# 5. Play against your trained DQN agent
+# After training, you'll get a message like:
+# "🏆 Best models saved in: /path/to/data/training/dqn_training_YYYYMMDD_HHMMSS/models"
+
+# Option A: Load the trained model programmatically
+python -c "
+from gomoku.ai.agents.dqn_agent import DQNAgent
+agent = DQNAgent.load_from_file('data/training/YOUR_RUN_NAME/models/best_agent.pt', epsilon=0.02)
+print('Trained agent loaded! Win rate vs Random:', agent.metadata.get('random_win_rate', 'unknown'))
+"
+
+# Option B: Use CLI to play (supports trained model loading)
+python scripts/play.py  # Select option 4 (DQN), then option 2 to load your trained model
+```
+
+### Available Game Modes
+
+1. **Player vs Player (PvP)** - Human vs Human
+2. **Player vs AI - Random (Easy)** - Good for beginners
+3. **Player vs AI - Heuristic (Hard)** - Challenging rule-based AI
+4. **Player vs AI - DQN (Neural Network)** - Deep learning agent
+5. **AI vs AI - Random vs Heuristic** - Watch AIs compete
+6. **AI vs AI - Heuristic vs DQN** - Watch advanced AIs compete
+
+### Training Configuration Presets
+
+- **`train_demo.py`** or **`--preset demo`**: 500 steps, frequent eval, perfect for testing (~3 minutes)
+- **`--preset quick`**: 2,000 steps, small buffers, fast evaluation (~10 minutes)
+- **`--preset strategic`**: 5,000 steps, optimized for tactical learning, beats Random easily (~15 minutes)
+- **`--preset standard`**: 10,000 steps, standard buffers, thorough evaluation (~30 minutes)  
+- **`--preset long`**: 50,000 steps, large buffers, comprehensive training (1-2 hours)
 
 ---
 
